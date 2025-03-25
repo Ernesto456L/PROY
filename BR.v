@@ -1,24 +1,21 @@
-`timescale 1ns/1ns
 module BR (
-	input [4:0] RA1,
-	input [4:0] RA2,
-	input [4:0] WA,
-	input [31:0] DW,
-	input WE,
-	output reg [31:0] DR1,
-	output reg [31:0] DR2
+    input wire clk,
+    input wire [4:0] RA1, RA2, WA,
+    input wire WE,
+    input wire [31:0] DW,
+    output wire [31:0] DR1, DR2
 );
+    reg [31:0] registros [0:15]; // 15 registros de 32 bits
 
-reg [31:0]BR[0:15];
-
-initial begin
-	#100;
-	$readmemb("datos.txt", BR);
-end
-
-    always @(*) begin
-        DR1 = memRom[RA1]; 
-        DR2 = memRom[RA2]; 
+    initial begin
+        $readmemb("datos.txt", registros); // Inicialización desde archivo
     end
-	
+
+    assign DR1 = registros[RA1]; // Lectura asíncrona
+    assign DR2 = registros[RA2];
+
+    always @(posedge clk) begin
+        if (WE) begin registros[WA] <= DW;
+        end
+    end
 endmodule
