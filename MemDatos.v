@@ -1,15 +1,14 @@
-module MemDatos (
-	input [3:0] Addres,
-	input [31:0] dataIn,
-	input [3:0] W, //W Y R no puden ser 1 y 1
-	input [31:0] R,
-	output reg[31:0] DS
+module DataMemory (
+    input wire clk,
+    input wire [31:0] DataIn,
+    input wire [31:0] Address,  // Dirección de 32 bits (usa los 7 LSBs)
+    input wire W, R,
+    output reg [31:0] DataOut
 );
+    reg [31:0] memoria [0:127]; // 128 palabras de 32 bits
 
-reg [31:0]memDatos[0:119];
-
+    always @(posedge clk) begin
+        if (W) memoria[Address[6:0]] <= DataIn;  // Escritura
+        if (R) DataOut <= memoria[Address[6:0]];  // Lectura
+    end
 endmodule
-
-//SLT = Ternaria
-//En sum wl we de BR es 1, la operacion es la de suma, el multiplexor es 0 para que mande a la alu, y el w y r de el memDatos sera 0 y 0
-//En Sw, el we del BR es 0, la operacion es xxxx, el multiplexor es 1 para que pase a la memDatos, y ahí w sera 1 y r 0
