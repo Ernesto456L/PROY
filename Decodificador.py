@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
-# Codificación de operaciones (basado en tu ejemplo)
+# Codificación de operaciones
 OPCODES = {
     "ADD": "0011",
     "SUB": "0100",
@@ -27,7 +27,7 @@ class DecodificadorApp:
         self.boton_convertir = tk.Button(frame_superior, text="Convertir", command=self.convertir_archivo, state=tk.DISABLED)
         self.boton_convertir.pack(side=tk.LEFT, padx=5)
         
-        # Texto para resultados
+        # Área de texto con scrollbars
         self.texto_resultado = tk.Text(root, height=15, width=80, wrap=tk.NONE)
         self.scroll_y = ttk.Scrollbar(root, orient=tk.VERTICAL, command=self.texto_resultado.yview)
         self.scroll_x = ttk.Scrollbar(root, orient=tk.HORIZONTAL, command=self.texto_resultado.xview)
@@ -38,6 +38,7 @@ class DecodificadorApp:
         self.texto_resultado.pack(fill=tk.BOTH, expand=True)
         
         self.archivo_actual = None
+        self.instrucciones_originales = []  # Almacenará las instrucciones leídas
     
     def seleccionar_archivo(self):
         filepath = filedialog.askopenfilename(filetypes=[("Archivos de texto", "*.txt")])
@@ -45,50 +46,54 @@ class DecodificadorApp:
             self.archivo_actual = filepath
             self.label_archivo.config(text=f"Archivo seleccionado: {filepath}")
             self.boton_convertir.config(state=tk.NORMAL)
+            
+            # Leer y mostrar instrucciones originales
+            try:
+                with open(filepath, 'r') as file:
+                    self.instrucciones_originales = [linea.strip() for linea in file.readlines() if linea.strip()]
+                
+                self.texto_resultado.delete(1.0, tk.END)
+                self.texto_resultado.insert(tk.END, "--- Instrucciones Originales ---\n")
+                for linea in self.instrucciones_originales:
+                    self.texto_resultado.insert(tk.END, f"{linea}\n")
+            
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo leer el archivo: {str(e)}")
     
     def convertir_archivo(self):
-        if not self.archivo_actual:
+        if not self.instrucciones_originales:
             return
         
-        try:
-            with open(self.archivo_actual, 'r') as file:
-                lineas = file.readlines()
-            
-            self.texto_resultado.delete(1.0, tk.END)
-            resultados = []
-            
-            for linea in lineas:
-                linea = linea.strip()
-                if linea:
-                    # Procesar instrucción
-                    partes = linea.split()
-                    op = partes[0].upper()
-                    
-                    if op not in OPCODES:
-                        binario = f"// Instrucción no reconocida: {linea}"
-                    else:
-                        # Formatear según el tipo de instrucción
-                        if op == "SW":
-                            reg_dest = partes[1].replace("$", "")
-                            reg_src = partes[2].replace("$", "")
-                            binario = f"19'b{OPCODES[op]}_00000_{reg_dest.zfill(5)}_{reg_src.zfill(5)}; // {linea}"
-                        else:
-                            reg_dest = partes[1].replace("$", "")
-                            reg_src1 = partes[2].replace("$", "")
-                            reg_src2 = partes[3].replace("$", "")
-                            binario = f"19'b{OPCODES[op]}_{reg_dest.zfill(5)}_{reg_src1.zfill(5)}_{reg_src2.zfill(5)}; // {linea}"
-                    
-                    self.texto_resultado.insert(tk.END, f"instruccion = {binario}\n")
-                    resultados.append(f"instruccion = {binario}")
-            
-            # Guardar en archivo
-            with open("salida_binario.txt", "w") as f:
-                f.write("\n".join(resultados))
-            
-            messagebox.showinfo("Éxito", "Conversión completada. Resultados guardados en 'salida_binario.txt'")
+        self.texto_resultado.delete(1.0, tk.END)
+        resultados_binarios = []
         
-        except Exception as e:
-            messagebox.showerror("Error", f"Ocurrió un error: {str(e)}")
+        # Procesar cada instrucción
+        self.texto_resultado.insert(tk.END, "--- Conversión a Binario ---\n")
+        for linea in self.instrucciones_originales:
+            partes = linea.split()
+            op = partes[0].upper()
+            
+            if op not in OPCODES:
+                binario = f"// Instrucción no reconocida: {linea}"
+            else:
+                if op == "SW":
+                    reg_dest = partes[1].replace("$", "")
+                    reg_src = partes[2].replace("$", "")
+                    binario = f"19'b{OPCODES[op]}_00000_{reg_dest.zfill(5)}_{reg_src.zfill(5)};"
+                else:
+                    reg_dest = partes[1].replace("$", "")
+                    reg_src1 = partes[2].replace("$", "")
+                    reg_src2 = partes[3].replace("$", "")
+                    binario = f"19'b{OPCODES[op]}_{reg_dest.zfill(5)}_{reg_src1.zfill(5)}_{reg_src2.zfill(5)};"
+            
+            self.texto_resultado.insert(tk.END, f"instruccion = {binario}\n")
+            resultados_binarios.append(f"instruccion = {binario}")
+        
+        # Guardar en archivo
+        with open("salida_binario.txt", "w") as f:
+            f.write("\n".join(resultados_binarios))
+        
+        messagebox.showinfo("Éxito", "Conversión completada. Resultados guardados en 'salida_binario.txt'")
 
 if __name__ == "__main__":
     root = tk.Tk()
