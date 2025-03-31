@@ -71,18 +71,19 @@ class DecodificadorApp:
                         if op == "SW":
                             reg_dest = partes[1].replace("$", "")
                             reg_src = partes[2].replace("$", "")
-                            binario = f"19'b{OPCODES[op]}_00000_{reg_dest.zfill(5)}_{reg_src.zfill(5)}; // {linea}"
+                            binario = f"19'b{OPCODES[op]}_00000_{reg_dest.zfill(5)}_{reg_src.zfill(5)}"
                         else:
                             reg_dest = partes[1].replace("$", "")
                             reg_src1 = partes[2].replace("$", "")
                             reg_src2 = partes[3].replace("$", "")
-                            binario = f"19'b{OPCODES[op]}_{reg_dest.zfill(5)}_{reg_src1.zfill(5)}_{reg_src2.zfill(5)}; // {linea}"
+                            binario = f"19'b{OPCODES[op]}_{reg_dest.zfill(5)}_{reg_src1.zfill(5)}_{reg_src2.zfill(5)}"
                     
-                    self.texto_resultado.insert(tk.END, f"instruccion = {binario}\n")
-                    resultados.append(f"instruccion = {binario}")
+                    # Mostrar instrucción ensamblador y binario en la interfaz
+                    self.texto_resultado.insert(tk.END, f"Instrucción: {linea} --> {binario}\n")
+                    resultados.append(binario)  # Solo guardar el binario para el archivo de salida
             
-            # Guardar en archivo
-            with open("salida_binario.txt", "w") as f:
+            # Guardar solo los resultados binarios en el archivo de salida
+            with open("salida_binario2.txt", "w") as f:
                 f.write("\n".join(resultados))
             
             messagebox.showinfo("Éxito", "Conversión completada. Resultados guardados en 'salida_binario.txt'")
